@@ -1,0 +1,17 @@
+Lambda env variables
+----------------------
+
+CONNECTION_TABLE	webrtc-videochat-connection-table
+WS_API_GATEWAY_URL	wss://h6ae1orck3.execute-api.ap-south-1.amazonaws.com/api
+WS_CONNECTION_URL	https://h6ae1orck3.execute-api.ap-south-1.amazonaws.com/api
+
+Lambda Role Permissions
+------------------------
+AWSLambdaTracerAccessExecutionRole-834ecfea-6a81-49ff-9652-52b7e1d9f77e
+AWSLambdaBasicExecutionRole-ae86bd17-a1bb-4e74-b9f3-aca83af13ab4
+AmazonAPIGatewayInvokeFullAccess
+AmazonAPIGatewayPushToCloudWatchLogs
+AmazonDynamoDBFullAccess
+AdministratorAccess
+AmazonAPIGatewayAdministrator
+AWSOpsWorksCloudWatchLogs
