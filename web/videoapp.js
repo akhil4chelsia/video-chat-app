@@ -9,7 +9,12 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true })
 
         function signal(action, inputData = {}) {
 
-            let data = '{"action": "signal", "Step": "' + action + '" , "Data" : ' + JSON.stringify(inputData) + ' } '
+            let sessionId = ""
+            if(metapeer.session_id){
+                sessionId = metapeer.session_id
+            }
+
+            let data = '{"action": "signal", "SessionId": "' + sessionId + '" , "Step": "' + action + '" , "Data" : ' + JSON.stringify(inputData) + ' } '
             console.log('signaling : ', JSON.stringify(data))
             ws.send(data);
         }
@@ -86,7 +91,7 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true })
                 console.log('Im non init peer session:', data.SessionId)
                 metapeer.type = data.WhoAmI
                 metapeer.session_id = data.SessionId
-                signal("PeerConnected", { "SessionId": data.SessionId })
+                signal("PeerConnected")
                 return
             }
 
@@ -145,7 +150,7 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true })
         }
 
         ws.onclose = function () {
-            signal("CloseConnection", { "SessionId": data.SessionId })
+            signal("CloseConnection")
             console.log('WEBSOCKET CLOSED!')
             peer = null
         };

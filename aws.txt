@@ -23,14 +23,14 @@ DynamoDB schema
     "SessionId" : "abcd123"
     "InitPeerConnectionId" : "123",
     "NonInitPeerConnectionId" : ""
-    "Status" : "WAITING"
+    "ConnectionStatus" : "WAITING"
 }
 
 {
     "SessionId" : "abcd123"
     "InitPeerConnectionId" : "123",
     "NonInitPeerConnectionId" : "567"
-    "Status" : "CONNNECTED"
+    "ConnectionStatus" : "CONNNECTED"
 }
 
 response = table.query(
@@ -51,3 +51,31 @@ table.update_item(
     }
 )
 
+table = dynamodb.Table('Movies')
+
+fe = Key('year').between(1950, 1959)
+pe = "#yr, title, info.rating"
+# Expression Attribute Names for Projection Expression only.
+ean = { "#yr": "year", }
+esk = None
+
+SCAN Table
+-------------------
+
+response = table.scan(
+        FilterExpression=Attr("Status").eq('WAITING') & Attr("Shift").eq(shift)
+    )
+
+for i in response['Items']:
+    print(json.dumps(i, cls=DecimalEncoder))
+
+while 'LastEvaluatedKey' in response:
+    response = table.scan(
+        ProjectionExpression=pe,
+        FilterExpression=fe,
+        ExpressionAttributeNames= ean,
+        ExclusiveStartKey=response['LastEvaluatedKey']
+        )
+
+    for i in response['Items']:
+        print(json.dumps(i, cls=DecimalEncoder))
