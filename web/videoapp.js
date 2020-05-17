@@ -5,100 +5,140 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true })
         const video = document.querySelector('video')
         video.srcObject = stream
         video.play()
+        video.muted = "muted";
 
-        client = {}
+        function signal(action, inputData = {}) {
+
+            let data = '{"action": "signal", "Step": "' + action + '" , "Data" : ' + JSON.stringify(inputData) + ' } '
+            console.log('signaling : ', JSON.stringify(data))
+            ws.send(data);
+        }
 
         var ws = new WebSocket("wss://h6ae1orck3.execute-api.ap-south-1.amazonaws.com/api");
 
-        function CreateVideo(stream) {
-            let video = document.createElement('video')
-            video.id = 'peerVideo'
-            video.srcObject = stream
-            video.class = 'embed-responsive-item'
-            document.querySelector('#peerDiv').appendChild(video)
-            video.play()
+        let peer
+        var count = 0
+        var client = {}
+
+        metapeer = {
+
         }
 
-        function InitPeer(type) {
-            let config = {
-                iceServers: [
-                    {
-                        urls: "stun:numb.viagenie.ca",
-                        username: "pasaseh@ether123.net",
-                        credential: "12345678"
-                    },
-                    {
-                        urls: "turn:numb.viagenie.ca",
-                        username: "pasaseh@ether123.net",
-                        credential: "12345678"
-                    }
-                ]
-            }
-            let params = {
-                initiator: (type == 'init') ? true : false, stream: stream, trickle: false, config: config
-            }
-            let peer = new SimplePeer(params)
-            peer.on('stream', function (stream) {
-                console.log('Akhil:Got stream from peer...')
-                CreateVideo(stream)
-            })
-            peer.on('close', function () {
-                document.getElementById('peerVideo').remove()
-                peer.destroy()
-            })
+        let config = {
+            'iceServers': [
+                {
+                    'urls': 'stun:stun.l.google.com:19302'
+                },
+                {
+                    'urls': 'turn:numb.viagenie.ca?transport=udp',
+                    'credential': '3TptDG7cAfz5TaXsda',
+                    'username': 'dollysam369@gmail.com'
+                }
+            ]
+        }
 
-            return peer
+
+        function gotRemoteStream(stream) {
+            console.log('gotRemoteStream')
+            const remoteVideo = document.getElementById('peerVideo');
+            if (!remoteVideo) {
+                let video = document.createElement('video')
+                video.id = 'peerVideo'
+                video.srcObject = stream
+                video.class = 'embed-responsive-item'
+                document.querySelector('#peerDiv').appendChild(video)
+                video.play()
+            }
+        }
+
+        function getConfig(type) {
+            let initiator = type == 'InitPeer' ? true : false
+            return {
+                initiator: initiator, stream: stream, trickle: false, config: config, reconnectTimer: 100,
+                iceTransportPolicy: 'relay', trickle: true
+            }
         }
 
 
         ws.onopen = function () {
-            let data = '{"action": "check" } '
-            console.log('checking peer count in db')
-            ws.send(data);
+            signal('WhoAmI')
         }
 
-        ws.onmessage = function (evt) {
+        ws.onmessage = async function (evt) {
 
             var data = JSON.parse(evt.data)
             console.log('onmessage', data)
 
-            if (data.trigger == 'InitPeer') {
-                console.log('Recieved InitPeer trigger.')
-                client.gotAnswer = false
-                let peer = InitPeer('init')
-                peer.on('signal', function (offer) {
-                    if (!client.gotAnswer) {
-                        let data = '{"action": "offer","Offer": ' + JSON.stringify(offer) + ' } '
-                        console.log('sending data', offer)
-                        ws.send(data);
+            if (data.WhoAmI && "InitPeer" == data.WhoAmI) {
+                console.log('Im init peer')
+                metapeer.type = data.WhoAmI
+            }
+
+            if (data.WhoAmI && "NonInitPeer" == data.WhoAmI) {
+                console.log('Im non init peer')
+                metapeer.type = data.WhoAmI
+                signal("PeerConnected")
+                return
+            }
+
+            if (data.PeerStatus && "Connected" == data.PeerStatus) {
+                console.log('Your buddy connected. [id] ', data.PeerConnectionId) // Exchange candidate and offer
+                metapeer.MyPeerId = data.PeerConnectionId
+
+                let configuration = getConfig(metapeer.type)
+                console.log('Configuration:', configuration)
+
+                peer = new SimplePeer(configuration)
+                peer.on('stream', function (stream) {
+                    gotRemoteStream(stream)
+                })
+                peer.on('close', function () {
+                    console.log('PEER DESTROYED!')
+                    document.getElementById('peerVideo').remove()
+                    //peer.destroy()
+                })
+
+                peer.on('signal', function (entity) {
+
+                    if (entity.type == "offer") {
+                        console.log('Sending offer.', entity)
+                        signal('Offer', entity)
+                    }
+                    else if (entity.candidate) {
+                        console.log('Sending candidate.', entity)
+                        signal('IceCandidate', entity)
+                    }
+                    else if (entity.type == "answer") {
+                        console.log('Sending answer.', entity)
+                        signal('Answer', entity)
                     }
                 })
 
-                client.peer = peer
+
+            }
+
+            if (data.IceCandidate) {
+                console.log('Recieved Ice Candidate.', data.IceCandidate)
+                peer.signal(data.IceCandidate)
             }
 
             if (data.Offer) {
-                console.log('got offer...', data.Offer)
-                let peer = InitPeer('NotInit')
-                peer.on('signal', (answer) => {
-                    let dataObj = '{"action": "answer","Answer": ' + JSON.stringify(answer) + ' , "ConnectionID": "' + data.ConnectionID + '" } '
-                    console.log('sending answer...', dataObj)
-                    ws.send(dataObj)
-                })
+                console.log('Recieved Offer.', data.Offer)
                 peer.signal(data.Offer)
             }
 
             if (data.Answer) {
-                console.log('got answer...', data.Answer)
+                console.log('Recieved Answer.', data.Answer)
                 client.gotAnswer = true
-                let peer = client.peer
                 peer.signal(data.Answer)
             }
 
         }
 
         ws.onclose = function () {
-            console.log("Connection is closed");
+            console.log('WEBSOCKET CLOSED!')
+            //peer.close()
+            //peer = null
         };
 
     })
