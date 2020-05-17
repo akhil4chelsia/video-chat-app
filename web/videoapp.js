@@ -70,21 +70,23 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true })
             console.log('onmessage', data)
 
 
-            if(data.PeerDisconnected){
+            if (data.PeerDisconnected) {
                 peer = null
                 document.getElementById('peerVideo').remove();
                 signal('WhoAmI')
             }
 
             if (data.WhoAmI && "InitPeer" == data.WhoAmI) {
-                console.log('Im init peer')
+                console.log('Im init peer session:', data.SessionId)
                 metapeer.type = data.WhoAmI
+                metapeer.session_id = data.SessionId
             }
 
             if (data.WhoAmI && "NonInitPeer" == data.WhoAmI) {
-                console.log('Im non init peer')
+                console.log('Im non init peer session:', data.SessionId)
                 metapeer.type = data.WhoAmI
-                signal("PeerConnected")
+                metapeer.session_id = data.SessionId
+                signal("PeerConnected", { "SessionId": data.SessionId })
                 return
             }
 
@@ -143,6 +145,7 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true })
         }
 
         ws.onclose = function () {
+            signal("CloseConnection", { "SessionId": data.SessionId })
             console.log('WEBSOCKET CLOSED!')
             peer = null
         };

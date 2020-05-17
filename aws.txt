@@ -23,18 +23,31 @@ DynamoDB schema
     "SessionId" : "abcd123"
     "InitPeerConnectionId" : "123",
     "NonInitPeerConnectionId" : ""
-    "Status" : "WAITING",
-    "Session": {
-
-    }
+    "Status" : "WAITING"
 }
 
 {
     "SessionId" : "abcd123"
     "InitPeerConnectionId" : "123",
     "NonInitPeerConnectionId" : "567"
-    "Status" : "CONNNECTED",
-    "Session": {
-        
-    }
+    "Status" : "CONNNECTED"
 }
+
+response = table.query(
+  KeyConditionExpression=Key('Status').eq('WAITING') & Key('SessionId').begins_with('abcd123')
+)
+print(response['Items'])
+
+
+table.update_item(
+    Key={
+        'Status': 'WAITING',
+        'SessionId': session_id
+    },
+    UpdateExpression="set NonInitPeerConnectionId = :p, Status=:s",
+    ExpressionAttributeValues={
+        ':p': peer_connection_id,
+        ':s': "CONNECTED"
+    }
+)
+
