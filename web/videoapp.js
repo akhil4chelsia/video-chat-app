@@ -69,6 +69,13 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true })
             var data = JSON.parse(evt.data)
             console.log('onmessage', data)
 
+
+            if(data.PeerDisconnected){
+                peer = null
+                document.getElementById('peerVideo').remove();
+                signal('WhoAmI')
+            }
+
             if (data.WhoAmI && "InitPeer" == data.WhoAmI) {
                 console.log('Im init peer')
                 metapeer.type = data.WhoAmI
@@ -137,8 +144,7 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true })
 
         ws.onclose = function () {
             console.log('WEBSOCKET CLOSED!')
-            //peer.close()
-            //peer = null
+            peer = null
         };
 
     })

@@ -15,3 +15,26 @@ AmazonDynamoDBFullAccess
 AdministratorAccess
 AmazonAPIGatewayAdministrator
 AWSOpsWorksCloudWatchLogs
+
+DynamoDB schema
+----------------------
+
+{
+    "SessionId" : "abcd123"
+    "InitPeerConnectionId" : "123",
+    "NonInitPeerConnectionId" : ""
+    "Status" : "WAITING",
+    "Session": {
+
+    }
+}
+
+{
+    "SessionId" : "abcd123"
+    "InitPeerConnectionId" : "123",
+    "NonInitPeerConnectionId" : "567"
+    "Status" : "CONNNECTED",
+    "Session": {
+        
+    }
+}
