@@ -77,7 +77,10 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true })
 
             if (data.PeerDisconnected) {
                 peer = null
-                document.getElementById('peerVideo').remove();
+                let peerVideo = document.getElementById('peerVideo')
+                if(peerVideo){
+                    peerVideo.remove();
+                }
                 signal('WhoAmI')
             }
 
@@ -108,7 +111,10 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true })
                 })
                 peer.on('close', function () {
                     console.log('PEER DESTROYED!')
-                    document.getElementById('peerVideo').remove()
+                    let peerVideo = document.getElementById('peerVideo')
+                    if(peerVideo){
+                        peerVideo.remove()
+                    }
                     //peer.destroy()
                 })
 
