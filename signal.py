@@ -7,7 +7,7 @@ from decimal import Decimal
 import boto3
 from boto3.dynamodb.conditions import Key, Attr
 
-table_name = os.environ['CONNECTION_TABLE']
+table_name = os.environ['SESSION_TABLE']
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table(table_name)
 
@@ -76,31 +76,16 @@ def update_session_connected(connection_id, session_id):
     )
 
 
-def notify_peer(session_id, connection_id):
+def notify_peer(session, connection_id):
     ws_client = boto3.client('apigatewaymanagementapi', endpoint_url=os.environ['WS_CONNECTION_URL'])
     data = {
         'PeerDisconnected': 'true'
     }
+    peer_connection_id = session['NonInitPeerConnectionId'] if connection_id==session['InitPeerConnectionId'] else session['InitPeerConnectionId']
     ws_client.post_to_connection(
         Data=json.dumps(data, cls=DecimalEncoder),
-        ConnectionId=get_my_peer_id(session_id, connection_id)
+        ConnectionId=peer_connection_id
     )
-
-
-def update_as_init_peer(session_id, connection_id, session):
-    if connection_id == session['InitPeerConnectionId']:
-        table.update_item(
-            Key={
-                'SessionId': session_id
-            },
-            UpdateExpression="set NonInitPeerConnectionId = :p, InitPeerConnectionId = :n, ConnectionStatus=:s",
-            ExpressionAttributeValues={
-                ':p': '',
-                ':n': connection_id,
-                ':s': "WAITING"
-            }
-        )
-
 
 def delete_session(session_id):
     table.delete_item(
@@ -118,12 +103,8 @@ def get_session(session_id):
 
 def close_session(connection_id, session_id):
     session = get_session(session_id)
-    if session['ConnectionStatus'] == 'CONNECTED':
-        update_as_init_peer(session_id, connection_id, session)
-    else:
-        delete_session(session_id)
-
-    notify_peer(session_id, connection_id)
+    delete_session(session_id)
+    notify_peer(session, connection_id)
 
 
 def notify_all_peers(connection_id, session_id):

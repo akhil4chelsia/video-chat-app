@@ -150,7 +150,6 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true })
         }
 
         ws.onclose = function () {
-            signal("CloseConnection")
             console.log('WEBSOCKET CLOSED!')
             peer = null
         };
