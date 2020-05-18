@@ -19,11 +19,24 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true })
             ws.send(data);
         }
 
+        function triggerCount() {
+
+            let sessionId = ""
+            if(metapeer.session_id){
+                sessionId = metapeer.session_id
+            }
+
+            let data = '{"action": "count"}'
+            console.log('getting count : ', JSON.stringify(data))
+            ws.send(data);
+        }
+
         var ws = new WebSocket("wss://h6ae1orck3.execute-api.ap-south-1.amazonaws.com/api");
 
         let peer
         var count = 0
         var client = {}
+        let interval = null
 
         metapeer = {
 
@@ -64,6 +77,11 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true })
             }
         }
 
+        function updateOnlineUsers(count){
+            console.log('usersCount:',count)
+            document.getElementById('usersCount').innerHTML=count
+        }
+
 
         ws.onopen = function () {
             signal('WhoAmI')
@@ -74,7 +92,6 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true })
             var data = JSON.parse(evt.data)
             console.log('onmessage', data)
 
-
             if (data.PeerDisconnected) {
                 peer = null
                 let peerVideo = document.getElementById('peerVideo')
@@ -82,6 +99,15 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true })
                     peerVideo.remove();
                 }
                 signal('WhoAmI')
+            }
+
+            if(data.SessionsCount){
+                updateOnlineUsers(data.SessionsCount)
+            }
+
+            if(data.WhoAmI){
+                //triggerCount()
+                interval = setInterval(triggerCount, 4000);
             }
 
             if (data.WhoAmI && "InitPeer" == data.WhoAmI) {
@@ -158,6 +184,7 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true })
         ws.onclose = function () {
             console.log('WEBSOCKET CLOSED!')
             peer = null
+            clearInterval(interval)
         };
 
     })
