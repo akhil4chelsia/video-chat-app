@@ -52,6 +52,7 @@ def lambda_handler(event, context):
     delete_session(session['SessionId'])
     peer_connection_id = session['NonInitPeerConnectionId'] if connection_id==session['InitPeerConnectionId'] else session['InitPeerConnectionId']
     notify_peer(peer_connection_id)
+    
     return {
         'statusCode': 200,
         'body': json.dumps('Successfully disconnected')

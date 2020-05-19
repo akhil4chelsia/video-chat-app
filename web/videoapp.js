@@ -51,8 +51,6 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true })
             ws.send(data);
         }
 
-
-
         var count = 0
         var client = {}
         let interval = null
@@ -114,6 +112,7 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true })
             if (data.PeerDisconnected) {
                 peer = null
                 let peerVideo = document.getElementById('peerVideo')
+
                 if (peerVideo) {
                     peerVideo.remove();
                 }
@@ -157,6 +156,7 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true })
                 peer.on('close', function () {
                     console.log('PEER DESTROYED!')
                     let peerVideo = document.getElementById('peerVideo')
+
                     if (peerVideo) {
                         peerVideo.remove()
                     }

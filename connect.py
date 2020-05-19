@@ -19,7 +19,6 @@ def lambda_handler(event, context):
             "ConnectionId": str(connection_id)
         }
     )
-
     return {
         'statusCode': 200,
         'body': json.dumps('Successfully connected')
