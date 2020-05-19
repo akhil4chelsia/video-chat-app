@@ -1,16 +1,36 @@
+var ws = null
+let peer = null
+
+function nextButton() {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.close()
+        init()
+        if (peer) {
+            peer.destroy()
+        }
+    }
+
+}
+
 
 navigator.mediaDevices.getUserMedia({ video: true, audio: true })
     .then(stream => {
+
+
+        function nextButton2() {
+        }
 
         const video = document.querySelector('video')
         video.srcObject = stream
         video.play()
         video.muted = "muted";
 
+        ws = new WebSocket("wss://h6ae1orck3.execute-api.ap-south-1.amazonaws.com/api");
+
         function signal(action, inputData = {}) {
 
             let sessionId = ""
-            if(metapeer.session_id){
+            if (metapeer.session_id) {
                 sessionId = metapeer.session_id
             }
 
@@ -22,7 +42,7 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true })
         function triggerCount() {
 
             let sessionId = ""
-            if(metapeer.session_id){
+            if (metapeer.session_id) {
                 sessionId = metapeer.session_id
             }
 
@@ -31,9 +51,8 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true })
             ws.send(data);
         }
 
-        var ws = new WebSocket("wss://h6ae1orck3.execute-api.ap-south-1.amazonaws.com/api");
 
-        let peer
+
         var count = 0
         var client = {}
         let interval = null
@@ -77,9 +96,9 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true })
             }
         }
 
-        function updateOnlineUsers(count){
-            console.log('usersCount:',count)
-            document.getElementById('usersCount').innerHTML=count
+        function updateOnlineUsers(count) {
+            console.log('usersCount:', count)
+            document.getElementById('usersCount').innerHTML = count
         }
 
 
@@ -95,18 +114,18 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true })
             if (data.PeerDisconnected) {
                 peer = null
                 let peerVideo = document.getElementById('peerVideo')
-                if(peerVideo){
+                if (peerVideo) {
                     peerVideo.remove();
                 }
                 signal('WhoAmI')
             }
 
-            if(data.SessionsCount){
+            if (data.SessionsCount) {
                 updateOnlineUsers(data.SessionsCount)
             }
 
-            if(data.WhoAmI){
-                //triggerCount()
+            if (data.WhoAmI) {
+                triggerCount()
                 interval = setInterval(triggerCount, 4000);
             }
 
@@ -138,7 +157,7 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true })
                 peer.on('close', function () {
                     console.log('PEER DESTROYED!')
                     let peerVideo = document.getElementById('peerVideo')
-                    if(peerVideo){
+                    if (peerVideo) {
                         peerVideo.remove()
                     }
                     //peer.destroy()
@@ -191,3 +210,4 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true })
     .catch(err => {
         document.write(err)
     })
+

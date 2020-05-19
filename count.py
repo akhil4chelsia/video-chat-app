@@ -7,7 +7,7 @@ from decimal import Decimal
 import boto3
 from boto3.dynamodb.conditions import Key, Attr
 
-table_name = os.environ['SESSION_TABLE']
+table_name = os.environ['CONNECTION_TABLE']
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table(table_name)
 
