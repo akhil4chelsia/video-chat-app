@@ -23,18 +23,59 @@ DynamoDB schema
     "SessionId" : "abcd123"
     "InitPeerConnectionId" : "123",
     "NonInitPeerConnectionId" : ""
-    "Status" : "WAITING",
-    "Session": {
-
-    }
+    "ConnectionStatus" : "WAITING"
 }
 
 {
     "SessionId" : "abcd123"
     "InitPeerConnectionId" : "123",
     "NonInitPeerConnectionId" : "567"
-    "Status" : "CONNNECTED",
-    "Session": {
-        
-    }
+    "ConnectionStatus" : "CONNNECTED"
 }
+
+response = table.query(
+  KeyConditionExpression=Key('Status').eq('WAITING') & Key('SessionId').begins_with('abcd123')
+)
+print(response['Items'])
+
+
+table.update_item(
+    Key={
+        'Status': 'WAITING',
+        'SessionId': session_id
+    },
+    UpdateExpression="set NonInitPeerConnectionId = :p, Status=:s",
+    ExpressionAttributeValues={
+        ':p': peer_connection_id,
+        ':s': "CONNECTED"
+    }
+)
+
+table = dynamodb.Table('Movies')
+
+fe = Key('year').between(1950, 1959)
+pe = "#yr, title, info.rating"
+# Expression Attribute Names for Projection Expression only.
+ean = { "#yr": "year", }
+esk = None
+
+SCAN Table
+-------------------
+
+response = table.scan(
+        FilterExpression=Attr("Status").eq('WAITING') & Attr("Shift").eq(shift)
+    )
+
+for i in response['Items']:
+    print(json.dumps(i, cls=DecimalEncoder))
+
+while 'LastEvaluatedKey' in response:
+    response = table.scan(
+        ProjectionExpression=pe,
+        FilterExpression=fe,
+        ExpressionAttributeNames= ean,
+        ExclusiveStartKey=response['LastEvaluatedKey']
+        )
+
+    for i in response['Items']:
+        print(json.dumps(i, cls=DecimalEncoder))

@@ -9,8 +9,25 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true })
 
         function signal(action, inputData = {}) {
 
-            let data = '{"action": "signal", "Step": "' + action + '" , "Data" : ' + JSON.stringify(inputData) + ' } '
+            let sessionId = ""
+            if(metapeer.session_id){
+                sessionId = metapeer.session_id
+            }
+
+            let data = '{"action": "signal", "SessionId": "' + sessionId + '" , "Step": "' + action + '" , "Data" : ' + JSON.stringify(inputData) + ' } '
             console.log('signaling : ', JSON.stringify(data))
+            ws.send(data);
+        }
+
+        function triggerCount() {
+
+            let sessionId = ""
+            if(metapeer.session_id){
+                sessionId = metapeer.session_id
+            }
+
+            let data = '{"action": "count"}'
+            console.log('getting count : ', JSON.stringify(data))
             ws.send(data);
         }
 
@@ -19,6 +36,7 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true })
         let peer
         var count = 0
         var client = {}
+        let interval = null
 
         metapeer = {
 
@@ -59,6 +77,11 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true })
             }
         }
 
+        function updateOnlineUsers(count){
+            console.log('usersCount:',count)
+            document.getElementById('usersCount').innerHTML=count
+        }
+
 
         ws.onopen = function () {
             signal('WhoAmI')
@@ -69,21 +92,34 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true })
             var data = JSON.parse(evt.data)
             console.log('onmessage', data)
 
-
-            if(data.PeerDisconnected){
+            if (data.PeerDisconnected) {
                 peer = null
-                document.getElementById('peerVideo').remove();
+                let peerVideo = document.getElementById('peerVideo')
+                if(peerVideo){
+                    peerVideo.remove();
+                }
                 signal('WhoAmI')
             }
 
+            if(data.SessionsCount){
+                updateOnlineUsers(data.SessionsCount)
+            }
+
+            if(data.WhoAmI){
+                //triggerCount()
+                interval = setInterval(triggerCount, 4000);
+            }
+
             if (data.WhoAmI && "InitPeer" == data.WhoAmI) {
-                console.log('Im init peer')
+                console.log('Im init peer session:', data.SessionId)
                 metapeer.type = data.WhoAmI
+                metapeer.session_id = data.SessionId
             }
 
             if (data.WhoAmI && "NonInitPeer" == data.WhoAmI) {
-                console.log('Im non init peer')
+                console.log('Im non init peer session:', data.SessionId)
                 metapeer.type = data.WhoAmI
+                metapeer.session_id = data.SessionId
                 signal("PeerConnected")
                 return
             }
@@ -101,7 +137,10 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true })
                 })
                 peer.on('close', function () {
                     console.log('PEER DESTROYED!')
-                    document.getElementById('peerVideo').remove()
+                    let peerVideo = document.getElementById('peerVideo')
+                    if(peerVideo){
+                        peerVideo.remove()
+                    }
                     //peer.destroy()
                 })
 
@@ -145,6 +184,7 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true })
         ws.onclose = function () {
             console.log('WEBSOCKET CLOSED!')
             peer = null
+            clearInterval(interval)
         };
 
     })
