@@ -1,5 +1,5 @@
 var ws = null
-let peer = null
+let peers = []
 
 function nextButton() {
     if (ws && ws.readyState === WebSocket.OPEN) {
@@ -25,7 +25,7 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true })
         video.play()
         video.muted = "muted";
 
-        ws = new WebSocket("wss://h6ae1orck3.execute-api.ap-south-1.amazonaws.com/api");
+        ws = new WebSocket("wss://nqlfvsvv4e.execute-api.ap-south-1.amazonaws.com/api");
 
         function signal(action, inputData = {}) {
 
@@ -72,17 +72,19 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true })
             ]
         }
 
+        var connectionCount = 0
 
         function gotRemoteStream(stream) {
             console.log('gotRemoteStream')
-            const remoteVideo = document.getElementById('peerVideo');
+            const remoteVideo = document.getElementById('peerVideo' + connectionCount);
             if (!remoteVideo) {
                 let video = document.createElement('video')
                 video.id = 'peerVideo'
                 video.srcObject = stream
                 video.class = 'embed-responsive-item'
-                document.querySelector('#peerDiv').appendChild(video)
+                document.getElementById('peerDiv' + connectionCount).appendChild(video)
                 video.play()
+                connectionCount = connectionCount + 1
             }
         }
 
@@ -124,8 +126,8 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true })
             }
 
             if (data.WhoAmI) {
-                triggerCount()
-                interval = setInterval(triggerCount, 4000);
+                //triggerCount()
+                //interval = setInterval(triggerCount, 4000);
             }
 
             if (data.WhoAmI && "InitPeer" == data.WhoAmI) {
@@ -149,7 +151,7 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true })
                 let configuration = getConfig(metapeer.type)
                 console.log('Configuration:', configuration)
 
-                peer = new SimplePeer(configuration)
+                let peer = new SimplePeer(configuration)
                 peer.on('stream', function (stream) {
                     gotRemoteStream(stream)
                 })
@@ -179,30 +181,40 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true })
                     }
                 })
 
+                peers.push(peer)
 
             }
 
             if (data.IceCandidate) {
                 console.log('Recieved Ice Candidate.', data.IceCandidate)
-                peer.signal(data.IceCandidate)
+                peers.forEach(peer => {
+                    peer.signal(data.IceCandidate)
+                })
+
             }
 
             if (data.Offer) {
                 console.log('Recieved Offer.', data.Offer)
-                peer.signal(data.Offer)
+                peers.forEach(peer => {
+                    peer.signal(data.Offer)
+                })
+
             }
 
             if (data.Answer) {
                 console.log('Recieved Answer.', data.Answer)
                 client.gotAnswer = true
-                peer.signal(data.Answer)
+                peers.forEach(peer => {
+                    peer.signal(data.Answer)
+                })
+
             }
 
         }
 
         ws.onclose = function () {
             console.log('WEBSOCKET CLOSED!')
-            peer = null
+            //peer = null
             clearInterval(interval)
         };
 

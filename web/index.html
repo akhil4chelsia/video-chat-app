@@ -1,18 +1,33 @@
 <html>
 
 <head>
-    <title>Lexico | Talk to Strangers.</title>
+    <title>Synod | Video Conference.</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
 </head>
 
 <body style="background-image: linear-gradient(#59635d, #121313);">
-    <h1 style="color: aquamarine; text-align: center;"> Lexico</h1>
-    <h5 style="color:beige; text-align: center;">Random video chat | Online users : <span id="usersCount">0</span></h5>
-    <h6 style="color:darkturquoise; text-align:center">[Supports only Chrome, Firefox and Opera browsers] [Allow permission for Camera and Microphone]</h6>
-    
+    <h1 style="color: aquamarine; text-align: center;"> Synod</h1>
+    <h5 style="color:beige; text-align: center;">Video conference | Online users : <span id="usersCount">0</span></h5>
+    <h6 style="color:darkturquoise; text-align:center">[Supports only 6 users in Chrome, Firefox and Opera browsers] [Allow
+        permission for Camera and Microphone]</h6>
+
     <div class="container-fluid">
-        <div class="row h-100 w-100">
-            <div class="col-12 col-sm-6 d-flex justify-content-center">
+
+        <div class="row">
+            <div class="col embed-responsive embed-responsive-16by9">
+                <video id="localVideo" muted></video>
+            </div>
+            <div id="peerDiv0" class="col embed-responsive embed-responsive-16by9"></div>
+            <div id="peerDiv1" class="col embed-responsive embed-responsive-16by9"></div>
+        </div>
+        <br/>
+        <div class="row">
+            <div id="peerDiv2" class="col embed-responsive embed-responsive-16by9"></div>
+            <div id="peerDiv3" class="col embed-responsive embed-responsive-16by9"> </div>
+            <div id="peerDiv4" class="col embed-responsive embed-responsive-16by9"></div>
+        </div>
+
+        <!--   <div class="col-12 col-sm-6 d-flex justify-content-center">
                 <div class="embed-responsive embed-responsive-16by9">
                     <video id="localVideo" class="embed-responsive-item" muted></video>
                 </div>
@@ -22,8 +37,8 @@
                 <div id="peerDiv" class="embed-responsive embed-responsive-16by9">
                     
                 </div>
-            </div>
-        </div>
+            </div> -->
+
     </div>
 
     <!-- <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>  -->
